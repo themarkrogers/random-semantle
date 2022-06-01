@@ -1,6 +1,9 @@
 import base64
 from random import randint
 
+import requests
+from bs4 import BeautifulSoup
+
 WORD_LIST_FILENAME = "words.txt"
 SEMANTLE_BASE_URL = "https://semantle.com/?word="
 ENCODING = "utf-8"
@@ -24,16 +27,28 @@ def _base64_word(word: str, number_suffix: int = None) -> str:
     return encoded_str
 
 
-def _get_url_for_semantle(base64_word_and_suffix: str) -> str:
+def _get_url_for_semantle() -> str:
+    new_word = _pick_random_word()
+    base64_word_and_suffix = _base64_word(new_word)
     url = f"{SEMANTLE_BASE_URL}{base64_word_and_suffix}"
     return url
 
 
+def _get_team_code_for_semantle(game_url: str) -> str:
+    response = requests.get(f"{game_url}#")
+    if not response.ok:
+        raise Exception("There was a problem getting the team code from Semantle")
+    html_body = response.text
+    full_soup = BeautifulSoup(html_body, "lxml")
+    team_code = full_soup.find(id="team")
+    return team_code
+
+
 def main():
-    new_word = _pick_random_word()
-    base_64_word_and_suffix = _base64_word(new_word)
-    url = _get_url_for_semantle(base_64_word_and_suffix)
-    print(f"URL: {url}")
+    url = _get_url_for_semantle()
+    # team_code = _get_team_code_for_semantle(url)
+    print(f"URL:\t{url}")
+    # print(f"Team Code:\t{team_code}")
 
 
 if __name__ == '__main__':
